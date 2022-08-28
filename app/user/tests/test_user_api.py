@@ -17,6 +17,17 @@ def create_user(**kwargs):
     return get_user_model().objects.create_user(**kwargs)
 
 
+def user_data(**kwargs):
+    """Create, update and return dict with default user data"""
+    default = {
+        'email': 'test@example.com',
+        'password': 'testpassword123',
+        'name': 'Testname'
+    }
+    default.update(**kwargs)
+    return default
+
+
 class PublicUserApiTests(TestCase):
     """Tests the public features of the user API"""
 
@@ -32,11 +43,7 @@ class PublicUserApiTests(TestCase):
 
     def test_create_user_success(self):
         """Test creating user is successful."""
-        payload = {
-            'email': 'test@example.com',
-            'password': 'testpassword123',
-            'name': 'Testname'
-        }
+        payload = user_data()
 
         res = self.client.post(CREATE_USER_URL, payload)
 
@@ -47,11 +54,7 @@ class PublicUserApiTests(TestCase):
 
     def test_user_email_exists_error(self):
         """Test error returned if user email is already exists"""
-        payload = {
-            'email': 'test@example.com',
-            'password': 'testpassword123',
-            'name': 'Testname'
-        }
+        payload = user_data()
         create_user(**payload)
 
         res = self.client.post(CREATE_USER_URL, payload)
@@ -60,11 +63,7 @@ class PublicUserApiTests(TestCase):
 
     def test_password_to_short_error(self):
         """Test an error is returned if password less than 5 chars."""
-        payload = {
-            'email': 'test@example.com',
-            'password': 'test',
-            'name': 'Testname'
-        }
+        payload = user_data(password='test')
 
         res = self.client.post(CREATE_USER_URL, payload)
 
@@ -73,3 +72,55 @@ class PublicUserApiTests(TestCase):
             email=payload['email']
         ).exists()
         self.assertFalse(user_exists)
+
+    def test_create_access_token_for_user(self):
+        """Test creating access token is successful."""
+        payload = user_data()
+        get_user_model().objects.create_user(**payload)
+        del payload['name']
+
+        res = self.client.post(reverse('user:token_obtain_pair'), payload)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('access', res.data)
+
+    def test_create_refresh_token_for_user(self):
+        """Test creating refresh token is successful."""
+        payload = user_data()
+        get_user_model().objects.create_user(**payload)
+        del payload['name']
+
+        res = self.client.post(reverse('user:token_obtain_pair'), payload)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('refresh', res.data)
+
+    def test_create_token_bad_credentials(self):
+        """Test returns errors if credentials are invalid"""
+        default = user_data()
+        del default['name']
+        payload1, payload2, payload3 = default, default, default
+        payload1['email'] = 'wrong@example.com'
+        payload2['password'] = 'wrongpassword123'
+        payload3['email'] = 'wrong@example.com'
+        payload3['password'] = 'wrongpassword123'
+
+        get_user_model().objects.create_user(**user_data())
+
+        for payload in [payload1, payload2, payload3]:
+            res = self.client.post(reverse('user:token_obtain_pair'), payload)
+            self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_error_create_token_empty_credentials(self):
+        """Test returns errors if credentials are empty."""
+        default = user_data()
+        del default['name']
+        payload1, payload2, payload3 = default, default, default
+        payload1['email'] = ''
+        payload2['password'] = ''
+        payload3['email'] = ''
+        payload3['password'] = ''
+
+        get_user_model().objects.create_user(**user_data())
+
+        for payload in [payload1, payload2, payload3]:
+            res = self.client.post(reverse('user:token_obtain_pair'), payload)
+            self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
