@@ -92,8 +92,7 @@ class GalleryModelTests(TestCase):
             with mock.patch('django.db.models.ImageField.get_db_prep_save',
                             self.image_field_mock):
                 with self.assertRaises(IntegrityError):
-                    Gallery.objects.create(image=self.image_name,
-                                           user=self.user)
+                    Gallery.objects.create(image=self.image_name)
 
     def test_create_image_successful(self):
         """Test creating image for product is successful."""
@@ -102,7 +101,7 @@ class GalleryModelTests(TestCase):
             with mock.patch('django.db.models.ImageField.get_db_prep_save',
                             self.image_field_mock):
                 Gallery.objects.create(image=self.image_name,
-                                       product=self.product, user=self.user)
+                                       product=self.product)
                 image = Gallery.objects.get(product=self.product)
                 self.assertNotEqual(image, None)
                 self.assertEqual(image.image, self.image_name)
@@ -114,9 +113,9 @@ class GalleryModelTests(TestCase):
             with mock.patch('django.db.models.ImageField.get_db_prep_save',
                             self.image_field_mock):
                 Gallery.objects.create(image=self.image_name,
-                                       product=self.product, user=self.user)
+                                       product=self.product)
                 Gallery.objects.create(image=self.image_name,
-                                       product=self.product, user=self.user)
+                                       product=self.product)
 
                 count = Gallery.objects.filter(product=self.product).count()
                 self.assertEqual(count, 2)

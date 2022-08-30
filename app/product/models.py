@@ -8,6 +8,20 @@ def gallery_path(instance, filename):
     return os.path.join('gallery', str(instance.product.id), filename)
 
 
+class Author(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    name = models.CharField(max_length=255,
+                            blank=True,
+                            default=None,
+                            null=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Product(models.Model):
     name = models.CharField(max_length=255, blank=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
@@ -17,7 +31,9 @@ class Product(models.Model):
                                 decimal_places=2,
                                 default=0)
     createdon = models.DateTimeField(default=timezone.now)
-    author = models.ManyToManyField('Author')
+    author = models.ForeignKey(Author,
+                               on_delete=models.SET_NULL,
+                               null=True)
 
     def __str__(self):
         return self.name
@@ -28,19 +44,6 @@ class Gallery(models.Model):
     product = models.ForeignKey(Product,
                                 on_delete=models.CASCADE,
                                 related_name='images')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.image
-
-
-class Author(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE
-    )
-    name = models.CharField(max_length=255, blank=False)
-
-    def __str__(self):
-        return self.name
+        return self.image.name
