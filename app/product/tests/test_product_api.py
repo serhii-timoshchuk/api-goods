@@ -308,7 +308,7 @@ class PrivateProductApiTests(TestCase):
 
             payload = {
                 'name': 'Test product name111',
-                "images": [image_file]
+                'images_to_load': [image_file]
             }
 
             res = self.client.post(PRODUCT_URL, payload, format='multipart')
@@ -330,7 +330,7 @@ class PrivateProductApiTests(TestCase):
             image_file.seek(0)
 
             payload = {
-                       'images': [image_file]
+                       'images_to_load': [image_file]
                        }
             res = self.client.patch(url, payload, format='multipart')
 
@@ -347,7 +347,7 @@ class PrivateProductApiTests(TestCase):
 
         payload = {
             'asdasd': 'asd',
-            'images': []
+            'images_to_load': []
 
         }
 

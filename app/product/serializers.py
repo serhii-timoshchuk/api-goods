@@ -30,14 +30,16 @@ class AuthorSerializer(serializers.ModelSerializer):
 class BaseProductSerializer(serializers.ModelSerializer):
     """Serializer for Product"""
     author = AuthorSerializer(many=False, required=False)
-    images = serializers.ListField(
+    images_to_load = serializers.ListField(
         child=serializers.ImageField(max_length=None, allow_empty_file=True),
         allow_empty=True, min_length=None, max_length=None, required=False)
+    saved_images = ProductGallerySerializer(many=True, required=False)
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'price', 'createdon', 'author', 'images']
-        read_only_fields = ['id', 'createdon']
+        fields = ['id', 'name', 'price', 'createdon',
+                  'author', 'images_to_load', 'saved_images']
+        read_only_fields = ['id', 'createdon', 'saved_images']
         extra_kwargs = {'name': {'required': 'True'}}
 
     def _get_or_create_author(self, author, product):
@@ -61,7 +63,7 @@ class BaseProductSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """Create a product"""
         author = validated_data.pop('author', {})
-        images = validated_data.pop('images', [])
+        images = validated_data.pop('images_to_load', [])
         product = Product.objects.create(**validated_data)
         self._get_or_create_author(author, product)
         self._create_gallery_images(images, product)
@@ -70,7 +72,7 @@ class BaseProductSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         """Update product."""
         author = validated_data.pop('author', None)
-        images = validated_data.pop('images', None)
+        images = validated_data.pop('images_to_load', None)
 
         if author is not None:
             if instance.author is not None:
@@ -94,10 +96,9 @@ class BaseProductSerializer(serializers.ModelSerializer):
 
 class ProductGetSerializer(BaseProductSerializer):
     """Serializer for product detail view"""
-    images = ProductGallerySerializer(many=True, required=False)
 
     class Meta(BaseProductSerializer.Meta):
-        fields = BaseProductSerializer.Meta.fields
+        fields = ['id', 'name', 'price', 'createdon', 'author', 'saved_images']
 
 
 class ProductChangeSerializer(BaseProductSerializer):
