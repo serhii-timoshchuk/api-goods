@@ -1,5 +1,5 @@
 """
-Test for product models
+Tests for product models
 """
 
 from django.test import TestCase

@@ -13,10 +13,7 @@ class Author(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
     )
-    name = models.CharField(max_length=255,
-                            blank=True,
-                            default=None,
-                            null=True)
+    name = models.CharField(max_length=255, blank=False)
 
     def __str__(self):
         return self.name
@@ -33,17 +30,16 @@ class Product(models.Model):
     createdon = models.DateTimeField(default=timezone.now)
     author = models.ForeignKey(Author,
                                on_delete=models.SET_NULL,
-                               null=True)
+                               null=True, blank=True)
 
     def __str__(self):
         return self.name
 
 
 class Gallery(models.Model):
-    image = models.ImageField(upload_to=gallery_path)
+    image = models.ImageField(upload_to=gallery_path, null=False, blank=False)
     product = models.ForeignKey(Product,
-                                on_delete=models.CASCADE,
-                                related_name='images')
+                                on_delete=models.CASCADE)
 
     def __str__(self):
         return self.image.name
